@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: hotelApp
+  datasource:
+    url: jdbc:postgresql://localhost:9000/hotelApp?options=-c%20TimeZone=UTC
+    username: testUser
+    password: password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc.time_zone: UTC
