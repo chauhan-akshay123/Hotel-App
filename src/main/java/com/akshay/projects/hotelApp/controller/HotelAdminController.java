@@ -1,7 +1,9 @@
 package com.akshay.projects.hotelApp.controller;
 
 import com.akshay.projects.hotelApp.dto.Request.CreateHotelRequestDTO;
+import com.akshay.projects.hotelApp.dto.Request.UpdateHotelRequestDTO;
 import com.akshay.projects.hotelApp.dto.Response.HotelResponseDTO;
+import com.akshay.projects.hotelApp.dto.Response.SingleMessageResponseDTO;
 import com.akshay.projects.hotelApp.service.IHotelService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +37,48 @@ public class HotelAdminController {
     public ResponseEntity<HotelResponseDTO> getHotelById(@PathVariable Long hotelId) {
         log.info("Request received to fetch hotel with id={} ", hotelId);
         HotelResponseDTO responseDTO = hotelService.getHotelById(hotelId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(responseDTO);
+    }
+
+    @PutMapping("/{hotelId}")
+    public ResponseEntity<HotelResponseDTO> updateHotelById(@PathVariable Long hotelId, @RequestBody UpdateHotelRequestDTO requestDTO) {
+        log.info("Request received to update the hotel with id={}", hotelId);
+        HotelResponseDTO responseDTO = hotelService.updateHotelById(hotelId, requestDTO);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(responseDTO);
+    }
+
+    @DeleteMapping("/{hotelId}")
+    public ResponseEntity<SingleMessageResponseDTO> deleteHotelById(@PathVariable Long hotelId) {
+        log.info("Request received for deleting the hotel with id={}", hotelId);
+        SingleMessageResponseDTO responseDTO = hotelService.deleteHotelById(hotelId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(responseDTO);
+    }
+
+    @PatchMapping("/{hotelId}/activate")
+    public ResponseEntity<HotelResponseDTO> activateHotel(
+            @PathVariable Long hotelId
+    ) {
+        log.info("Request received to activate hotel with id: {}", hotelId);
+
+        HotelResponseDTO responseDTO = hotelService.activateHotelbyId(hotelId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(responseDTO);
+    }
+
+    @PatchMapping("/{hotelId}/deactivate")
+    public ResponseEntity<HotelResponseDTO> deactivateHotel(
+            @PathVariable Long hotelId
+    ) {
+        log.info("Request received to deactivate hotel with id: {}", hotelId);
+
+        HotelResponseDTO responseDTO =  hotelService.deactivateHotelById(hotelId);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(responseDTO);

@@ -1,7 +1,7 @@
 package com.akshay.projects.hotelApp.advice;
 
-import com.akshay.projects.hotelApp.exception.DuplicateResourceException;
-import com.akshay.projects.hotelApp.exception.ResourceNotFoundException;
+import com.akshay.projects.hotelApp.exception.*;
+import com.akshay.projects.hotelApp.exception.IllegalStateException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -87,6 +87,41 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(response);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiErrorResponse> handleIllegalState(
+            IllegalStateException ex
+    ) {
+
+        ApiErrorResponse response = ApiErrorResponse.builder()
+                .status(HttpStatus.BAD_REQUEST.value())
+                .message(ex.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(response);
+    }
+
+    @ExceptionHandler({
+            HotelAlreadyActiveException.class,
+            HotelAlreadyInactiveException.class
+    })
+    public ResponseEntity<ApiErrorResponse> handleHotelStateException(
+            RuntimeException ex
+    ) {
+
+        ApiErrorResponse response = ApiErrorResponse.builder()
+                .status(HttpStatus.CONTINUE.value())
+                .message(ex.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
                 .body(response);
     }
 }
