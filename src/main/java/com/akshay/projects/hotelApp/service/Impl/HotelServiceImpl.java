@@ -129,6 +129,8 @@ public class HotelServiceImpl implements IHotelService {
             throw new HotelAlreadyActiveException("Hotel is already active with id: " + id);
         }
         hotel.setActive(true);
+    // TODO: create inventory for all the rooms for this hotel
+
         Hotel updatedHotel = hotelRepository.save(hotel);
         log.info("Hotel activated successfully with id={}", id);
 
@@ -152,6 +154,7 @@ public class HotelServiceImpl implements IHotelService {
             );
         }
         hotel.setActive(false);
+        // TODO: inventory
         Hotel updateHotel = hotelRepository.save(hotel);
 
         return modelMapper.map(
