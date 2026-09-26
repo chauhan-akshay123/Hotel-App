@@ -27,10 +27,13 @@ public class Hotel {
     private String [] photos;
 
     @Column(columnDefinition = "TEXT[]")
-    private String amenities;
+    private String[] amenities;
 
     @Embedded
     private HotelContactInfo contactInfo;
+
+    @ManyToOne
+    private User owner;
 
     @Column(nullable = false)
     private Boolean active;
