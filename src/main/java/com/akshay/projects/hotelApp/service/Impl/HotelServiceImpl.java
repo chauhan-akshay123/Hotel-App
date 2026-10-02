@@ -6,9 +6,11 @@ import com.akshay.projects.hotelApp.dto.Response.HotelResponseDTO;
 import com.akshay.projects.hotelApp.dto.Response.SingleMessageResponseDTO;
 import com.akshay.projects.hotelApp.entity.Hotel;
 import com.akshay.projects.hotelApp.entity.HotelContactInfo;
+import com.akshay.projects.hotelApp.entity.Room;
 import com.akshay.projects.hotelApp.exception.*;
 import com.akshay.projects.hotelApp.exception.IllegalStateException;
 import com.akshay.projects.hotelApp.repository.HotelRepository;
+import com.akshay.projects.hotelApp.repository.RoomRepository;
 import com.akshay.projects.hotelApp.service.IHotelService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class HotelServiceImpl implements IHotelService {
 
     private final HotelRepository hotelRepository;
+    private final RoomRepository roomRepository;
     private final ModelMapper modelMapper;
+    private final InventoryServiceImpl inventoryService;
 
     @Override
     @Transactional
@@ -102,15 +106,18 @@ public class HotelServiceImpl implements IHotelService {
     }
 
     @Override
+    @Transactional
     public SingleMessageResponseDTO deleteHotelById(Long id) {
         log.info("Deleting the hotel with id: {}", id);
-
         Hotel hotel = hotelRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Hotel not found with id: " + id)
         );
 
-        hotelRepository.deleteById(id);
-        // TODO: delete the future invetories for this hotel
+        for (Room room : hotel.getRooms()) {
+            inventoryService.deleteInventoriesByRoom(room);
+            roomRepository.delete(room);
+        }
+        hotelRepository.delete(hotel);
 
         return SingleMessageResponseDTO.builder()
                 .message("Hotel has been deleted successfully")
@@ -129,7 +136,11 @@ public class HotelServiceImpl implements IHotelService {
             throw new HotelAlreadyActiveException("Hotel is already active with id: " + id);
         }
         hotel.setActive(true);
-    // TODO: create inventory for all the rooms for this hotel
+
+        // only do it once
+        for(Room room: hotel.getRooms()) {
+            inventoryService.InitializeRoomForAYear(room);
+        }
 
         Hotel updatedHotel = hotelRepository.save(hotel);
         log.info("Hotel activated successfully with id={}", id);
@@ -153,8 +164,10 @@ public class HotelServiceImpl implements IHotelService {
                     "Hotel is already inactive with id: " + id
             );
         }
+        for (Room room : hotel.getRooms()) {
+            inventoryService.deleteFutureInvetories(room);
+        }
         hotel.setActive(false);
-        // TODO: inventory
         Hotel updateHotel = hotelRepository.save(hotel);
 
         return modelMapper.map(

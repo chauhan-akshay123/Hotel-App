@@ -30,7 +30,7 @@ public class RoomAdminController  {
                 .body(responseDTO);
     }
 
-    @GetMapping("/admin/hotels/{hotelId}/rooms")
+    @GetMapping
     public ResponseEntity<List<RoomResponseDTO>> getAllRooms(@PathVariable Long hotelId) {
         log.info("Request received for fetching all the rooms with hotelId: {}", hotelId);
         List<RoomResponseDTO> response = roomService.getAllRoomsInHotel(hotelId);

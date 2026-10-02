@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,6 +26,7 @@ public class RoomServiceImpl implements IRoomService {
     private final RoomRepository roomRepository;
     private final HotelRepository hotelRepository;
     private final ModelMapper modelMapper;
+    private final InventoryServiceImpl inventoryService;
 
     @Override
     public RoomResponseDTO createRoom(Long hotelId ,CreateRoomRequestDTO requestDTO) {
@@ -38,10 +40,11 @@ public class RoomServiceImpl implements IRoomService {
         room.setHotel(hotel);
         Room savedRoom = roomRepository.save(room);
         log.info("Room is created successfully with id: {}", savedRoom.getId());
-
-        // TODO: Create inventory as soon as room is created if hotel is active
-
-        return modelMapper.map(room, RoomResponseDTO.class);
+        if(hotel.getActive()) {
+            inventoryService.InitializeRoomForAYear(savedRoom);
+        }
+        log.info("Inventory initialized for the room with id: {}", savedRoom.getId());
+        return modelMapper.map(savedRoom, RoomResponseDTO.class);
     }
 
     @Override
@@ -70,14 +73,15 @@ public class RoomServiceImpl implements IRoomService {
     }
 
     @Override
+    @Transactional
     public SingleMessageResponseDTO deleteRoomById(Long roomId) {
         log.info("Deleting room with Id: {}", roomId);
 
-        boolean exists = roomRepository.existsById(roomId);
-        if(!exists) {
-            throw new ResourceNotFoundException("Room not found with Id: " + roomId);
-        }
-        roomRepository.deleteById(roomId);
+        Room room = roomRepository.findById(roomId).orElseThrow(
+                () -> new ResourceNotFoundException("Room not found with Id: " + roomId)
+        );
+        inventoryService.deleteInventoriesByRoom(room);
+        roomRepository.delete(room);
         log.info("Room with id: {} deleted successfully", roomId);
 
         return SingleMessageResponseDTO.builder()
